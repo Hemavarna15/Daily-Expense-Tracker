@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Expense Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212; /* Dark background for modern dark mode */
+            color: #e0e0e0; /* Light text for contrast */
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #1e1e1e; /* Dark card background */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); /* Deeper shadow for depth */
+        }
+
+        h1, h2 {
+            color: #ffffff; /* White headings */
+            text-align: center;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        input, select, button {
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00bcd4; /* Teal accent on focus */
+        }
+
+        button {
+            background-color: #00bcd4; /* Teal button */
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #0097a7; /* Darker teal on hover */
+            transform: translateY(-2px); /* Subtle lift effect */
+        }
+
+        .total-section {
+            margin-bottom: 30px;
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #00bcd4; /* Teal accent */
+        }
+
+        .expense-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .expense-list li {
+            background-color: #2a2a2a;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #00bcd4; /* Teal accent */
+            transition: background-color 0.3s;
+        }
+
+        .expense-list li:hover {
+            background-color: #333; /* Slightly lighter on hover */
+        }
+
+        .delete-btn {
+            background-color: #f44336; /* Red for delete */
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f; /* Darker red on hover */
+        }
+
+        @media (max-width: 600px) {
+            .form-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Expense Tracker</h1>
+        
+        <div class="form-section">
+            <input type="text" id="expense-name" placeholder="Expense Name/Description" required>
+            <input type="number" id="expense-amount" placeholder="Amount" min="0" step="0.01" required>
+            <select id="expense-category" required>
+                <option value="">Select Category</option>
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Other">Other</option>
+            </select>
+            <button id="add-expense-btn">Add Expense</button>
+        </div>
+        
+        <div class="total-section">
+            <h2>Total Spending: $<span id="total-amount">0.00</span></h2>
+        </div>
+        
+        <div class="expense-list">
+            <h2>Expense List</h2>
+            <ul id="expense-ul"></ul>
+        </div>
+    </div>
+    
+    <script>
+        // Array to store expenses
+        let expenses = [];
+
+        // Get DOM elements
+        const expenseNameInput = document.getElementById('expense-name');
+        const expenseAmountInput = document.getElementById('expense-amount');
+        const expenseCategorySelect = document.getElementById('expense-category');
+        const addExpenseBtn = document.getElementById('add-expense-btn');
+        const expenseUl = document.getElementById('expense-ul');
+        const totalAmountSpan = document.getElementById('total-amount');
+
+        // Function to add expense
+        function addExpense() {
+            const name = expenseNameInput.value.trim();
+            const amount = parseFloat(expenseAmountInput.value);
+            const category = expenseCategorySelect.value;
+            
+            // Validate inputs
+            if (!name || isNaN(amount) || amount <= 0 || !category) {
+                alert('Please fill in all fields correctly.');
+                return;
+            }
+            
+            // Create expense object
+            const expense = {
+                id: Date.now(), // Unique ID using timestamp
+                name: name,
+                amount: amount,
+                category: category
+            };
+            
+            // Add to expenses array
+            expenses.push(expense);
+            
+            // Clear inputs
+            expenseNameInput.value = '';
+            expenseAmountInput.value = '';
+            expenseCategorySelect.value = '';
+            
+            // Update display and total
+            displayExpenses();
+            updateTotal();
+        }
+
+        // Function to display expenses
+        function displayExpenses() {
+            expenseUl.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${expense.name} - ${expense.category} - $${expense.amount.toFixed(2)}</span>
+                    <button class="delete-btn" data-id="${expense.id}">Delete</button>
+                `;
+                expenseUl.appendChild(li);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', deleteExpense);
+            });
+        }
+
+        // Function to delete expense
+        function deleteExpense(e) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            expenses = expenses.filter(expense => expense.id !== id);
+            displayExpenses();
+            updateTotal();
+        }
+
+        // Function to update total
+        function updateTotal() {
+            const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            totalAmountSpan.textContent = total.toFixed(2);
+        }
+
+        // Event listener for add button
+        addExpenseBtn.addEventListener('click', addExpense);
+    </script>
+</body>
+</html>
